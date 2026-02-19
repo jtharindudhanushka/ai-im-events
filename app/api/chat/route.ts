@@ -113,8 +113,17 @@ export async function POST(req: NextRequest) {
         const reply = result.response.text();
 
         return NextResponse.json({ reply });
-    } catch (err) {
-        console.error('Gemini error:', err);
-        return NextResponse.json({ error: 'AI service temporarily unavailable.' }, { status: 503 });
+    } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error('Gemini error:', msg);
+        // Surface enough info to diagnose (safe — no key is in the message)
+        const friendly = msg.includes('API_KEY') || msg.includes('PERMISSION_DENIED')
+            ? 'Invalid or missing Gemini API key. Please check Vercel environment variables.'
+            : msg.includes('404') || msg.includes('not found')
+                ? 'Gemini model not found. Contact the organizer.'
+                : msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED')
+                    ? 'Gemini free-tier quota exceeded. Try again in a minute.'
+                    : 'AI service temporarily unavailable. Please retry.';
+        return NextResponse.json({ error: friendly }, { status: 503 });
     }
 }
