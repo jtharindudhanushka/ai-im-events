@@ -8,11 +8,26 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                const saved = localStorage.getItem('theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (saved === 'dark' || (!saved && prefersDark)) {
+                  document.documentElement.classList.add('dark');
+                }
+              } catch {}
+            `,
+          }}
+        />
+      </head>
       <body>
-        <div className="orb orb-1" />
-        <div className="orb orb-2" />
-        <div className="relative z-10 min-h-screen">{children}</div>
+        <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
+          {children}
+        </div>
       </body>
     </html>
   );

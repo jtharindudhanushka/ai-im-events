@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Leaf, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import {
+  Send, Leaf, CheckCircle2, AlertCircle, Loader2,
+  Moon, Sun, MessageCircleQuestion, RefreshCw,
+} from 'lucide-react';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface ChatMessage {
@@ -17,107 +19,190 @@ interface RegistrationData {
   reason: string;
 }
 
-// ── Paused Screen ─────────────────────────────────────────────────────────────
+// ── Theme toggle ──────────────────────────────────────────────────────────────
+function ThemeToggle() {
+  const [dark, setDark] = useState(false);
+
+  useEffect(() => {
+    setDark(document.documentElement.classList.contains('dark'));
+  }, []);
+
+  function toggle() {
+    const next = !dark;
+    setDark(next);
+    document.documentElement.classList.toggle('dark', next);
+    try { localStorage.setItem('theme', next ? 'dark' : 'light'); } catch { }
+  }
+
+  return (
+    <button className="icon-btn" onClick={toggle} title={dark ? 'Switch to light mode' : 'Switch to dark mode'}>
+      {dark ? <Sun size={15} /> : <Moon size={15} />}
+    </button>
+  );
+}
+
+// ── WhatsApp help button ───────────────────────────────────────────────────────
+function HelpButton() {
+  return (
+    <a
+      href="https://wa.me/964762195995"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="icon-btn"
+      title="Contact AI@IM Club on WhatsApp"
+    >
+      <MessageCircleQuestion size={15} />
+    </a>
+  );
+}
+
+// ── Closed screen ─────────────────────────────────────────────────────────────
 function ClosedScreen() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-4 text-center">
+    <div className="flex flex-col items-center justify-center min-h-screen px-4">
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="glass rounded-2xl p-10 max-w-md w-full"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="card max-w-md w-full p-10 text-center"
       >
-        <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto mb-6">
-          <AlertCircle className="w-8 h-8 text-amber-400" />
+        <div
+          className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-5"
+          style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}
+        >
+          <AlertCircle size={22} style={{ color: '#e9a23b' }} />
         </div>
-        <h2 className="text-2xl font-bold text-white mb-3">Registrations Closed</h2>
-        <p className="text-slate-400 leading-relaxed">
+        <h2 className="text-xl font-semibold mb-2" style={{ color: 'var(--text)' }}>
+          Registrations Closed
+        </h2>
+        <p className="text-sm leading-relaxed mb-6" style={{ color: 'var(--text-muted)' }}>
           Event registrations are not open at the moment.<br />
           Please check back later or contact the AI@IM club.
         </p>
-        <div className="mt-8 pt-6 border-t border-white/10">
-          <p className="text-xs text-slate-600">AI@IM Club — Codegen Greenhouse Field Visit</p>
-        </div>
+        <a
+          href="https://wa.me/964762195995"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          style={{
+            background: '#25D366',
+            color: '#fff',
+          }}
+        >
+          <MessageCircleQuestion size={14} />
+          Contact on WhatsApp
+        </a>
       </motion.div>
     </div>
   );
 }
 
-// ── Success Screen ────────────────────────────────────────────────────────────
+// ── Success screen ────────────────────────────────────────────────────────────
 function SuccessScreen({ data }: { data: RegistrationData }) {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-4">
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="glass rounded-2xl p-10 max-w-md w-full text-center"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="card max-w-sm w-full p-8 text-center"
       >
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          transition={{ type: 'spring', delay: 0.2 }}
-          className="w-20 h-20 rounded-full bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center mx-auto mb-6"
+          transition={{ type: 'spring', delay: 0.15 }}
+          className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5"
+          style={{ background: '#f0fdf4', border: '1px solid #bbf7d0' }}
         >
-          <CheckCircle2 className="w-10 h-10 text-emerald-400" />
+          <CheckCircle2 size={26} style={{ color: '#16a34a' }} />
         </motion.div>
-        <h2 className="text-2xl font-bold gradient-text mb-2">You&apos;re Registered! 🎉</h2>
-        <p className="text-slate-400 text-sm mb-8">See you at the Codegen Greenhouse!</p>
-        <div className="space-y-3 text-left">
+        <h2 className="text-xl font-semibold mb-1" style={{ color: 'var(--text)' }}>
+          You&apos;re Registered! 🎉
+        </h2>
+        <p className="text-sm mb-7" style={{ color: 'var(--text-muted)' }}>
+          See you at the Codegen Greenhouse!
+        </p>
+
+        <div className="space-y-2 text-left">
           {[
             { label: 'Name', value: data.name },
             { label: 'WhatsApp', value: data.whatsapp },
             { label: 'Level', value: data.level },
             { label: 'Reason', value: data.reason },
           ].map(({ label, value }) => (
-            <div key={label} className="glass rounded-xl px-4 py-3">
-              <p className="text-xs text-slate-500 uppercase tracking-wider mb-0.5">{label}</p>
-              <p className="text-white font-medium text-sm">{value}</p>
+            <div
+              key={label}
+              className="flex gap-3 px-3 py-2.5 rounded-lg"
+              style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}
+            >
+              <span className="text-xs font-medium w-16 flex-shrink-0 pt-0.5" style={{ color: 'var(--text-faint)' }}>
+                {label}
+              </span>
+              <span className="text-sm" style={{ color: 'var(--text)' }}>{value}</span>
             </div>
           ))}
         </div>
-        <div className="mt-8 pt-6 border-t border-white/10">
-          <p className="text-xs text-slate-600">AI@IM Club — Codegen Greenhouse Field Visit</p>
-        </div>
+
+        <div className="divider mt-7 mb-5" />
+        <p className="text-xs" style={{ color: 'var(--text-faint)' }}>
+          AI@IM Club · Codegen Greenhouse Field Visit
+        </p>
       </motion.div>
     </div>
   );
 }
 
-// ── Typing Indicator ──────────────────────────────────────────────────────────
+// ── Typing indicator ──────────────────────────────────────────────────────────
 function TypingIndicator() {
   return (
-    <div className="flex items-center gap-1.5 px-4 py-3 glass rounded-2xl rounded-tl-sm w-fit">
+    <div
+      className="flex items-center gap-1 px-3.5 py-2.5 rounded-2xl rounded-tl-sm w-fit"
+      style={{ background: 'var(--bot-bubble)' }}
+    >
       {[0, 1, 2].map((i) => (
-        <div key={i} className="w-2 h-2 rounded-full bg-violet-400 typing-dot" style={{ animationDelay: `${i * 0.2}s` }} />
+        <div
+          key={i}
+          className="w-1.5 h-1.5 rounded-full typing-dot"
+          style={{ background: 'var(--text-muted)', animationDelay: `${i * 0.18}s` }}
+        />
       ))}
     </div>
   );
 }
 
-// ── Chat Bubble ──────────────────────────────────────────────────────────────
-function Bubble({ msg, idx }: { msg: ChatMessage; idx: number }) {
+// ── Chat bubble ───────────────────────────────────────────────────────────────
+function Bubble({ msg }: { msg: ChatMessage }) {
   const isUser = msg.role === 'user';
   const text = msg.parts[0]?.text ?? '';
 
   return (
     <motion.div
-      key={idx}
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className={cn('flex w-full', isUser ? 'justify-end' : 'justify-start')}
+      transition={{ duration: 0.2 }}
+      className={`flex w-full ${isUser ? 'justify-end' : 'justify-start'}`}
     >
       {!isUser && (
-        <div className="w-8 h-8 rounded-full bg-violet-600/30 border border-violet-500/40 flex items-center justify-center flex-shrink-0 mt-1 mr-2">
-          <Leaf className="w-4 h-4 text-violet-300" />
+        <div
+          className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 mr-2"
+          style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}
+        >
+          <Leaf size={13} style={{ color: 'var(--accent)' }} />
         </div>
       )}
       <div
-        className={cn(
-          'max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap',
+        className="max-w-[76%] rounded-2xl px-3.5 py-2.5 text-[13.5px] leading-relaxed whitespace-pre-wrap"
+        style={
           isUser
-            ? 'bg-violet-600 text-white rounded-tr-sm'
-            : 'glass text-slate-200 rounded-tl-sm'
-        )}
+            ? {
+              background: 'var(--user-bubble)',
+              color: 'var(--user-bubble-fg)',
+              borderBottomRightRadius: '4px',
+            }
+            : {
+              background: 'var(--bot-bubble)',
+              color: 'var(--bot-bubble-fg)',
+              borderBottomLeftRadius: '4px',
+            }
+        }
       >
         {text}
       </div>
@@ -134,40 +219,17 @@ export default function HomePage() {
   const [regData, setRegData] = useState<RegistrationData | null>(null);
   const [error, setError] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
-
-  // Check pause status and start chat
-  useEffect(() => {
-    async function init() {
-      try {
-        const res = await fetch('/api/status');
-        const json = await res.json();
-        if (json.paused) {
-          setStatus('paused');
-          return;
-        }
-        setStatus('open');
-        // Kick off the conversation
-        await sendToGemini([], '__start__');
-      } catch {
-        setStatus('open');
-        await sendToGemini([], '__start__');
-      }
-    }
-    init();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [history, isTyping]);
 
-  async function sendToGemini(currentHistory: ChatMessage[], userMessage: string) {
+  const sendToGemini = useCallback(async (currentHistory: ChatMessage[], userMessage: string) => {
     setIsTyping(true);
     setError('');
 
-    const message = userMessage === '__start__'
-      ? 'Hello, I would like to register.'
-      : userMessage;
+    const message = userMessage === '__start__' ? 'Hello, I would like to register.' : userMessage;
 
     try {
       const res = await fetch('/api/chat', {
@@ -179,21 +241,20 @@ export default function HomePage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error ?? 'Something went wrong.');
+        setError(data.error ?? 'Something went wrong. Please try again.');
         return;
       }
 
       const reply: string = data.reply ?? '';
 
-      // Check for registration complete signal
+      // Detect completion signal
       const completionMatch = reply.match(/REGISTRATION_COMPLETE:([\s\S]*?\{[\s\S]*?\})/);
       if (completionMatch) {
         try {
           const parsed = JSON.parse(completionMatch[1]) as RegistrationData;
           setRegData(parsed);
 
-          // Show "Saving..." message briefly
-          const saveMsg = '✅ Saving your registration...';
+          const saveMsg = '✅ Saving your registration…';
           const newHistory: ChatMessage[] = [
             ...currentHistory,
             ...(userMessage !== '__start__' ? [{ role: 'user' as const, parts: [{ text: userMessage }] }] : []),
@@ -201,7 +262,6 @@ export default function HomePage() {
           ];
           setHistory(newHistory);
 
-          // POST to register route
           const saveRes = await fetch('/api/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -229,16 +289,29 @@ export default function HomePage() {
       ];
       setHistory(updatedHistory);
     } catch {
-      setError('Connection error. Please try again.');
+      setError('Connection error. Please check your network and try again.');
     } finally {
       setIsTyping(false);
+      inputRef.current?.focus();
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    async function init() {
+      try {
+        const res = await fetch('/api/status');
+        const json = await res.json();
+        if (json.paused) { setStatus('paused'); return; }
+      } catch { /* ignore */ }
+      setStatus('open');
+      await sendToGemini([], '__start__');
+    }
+    init();
+  }, [sendToGemini]);
 
   async function handleSend() {
     const msg = input.trim();
     if (!msg || isTyping) return;
-
     setInput('');
     const newHistory: ChatMessage[] = [...history, { role: 'user', parts: [{ text: msg }] }];
     setHistory(newHistory);
@@ -252,11 +325,18 @@ export default function HomePage() {
     }
   }
 
-  // ── Render states ──────────────────────────────────────────────────────────
+  function handleRetry() {
+    setError('');
+    setHistory([]);
+    setStatus('loading');
+    sendToGemini([], '__start__').then(() => setStatus('open'));
+  }
+
+  // ── Render loading ──────────────────────────────────────────────────────────
   if (status === 'loading') {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 text-violet-400 animate-spin" />
+        <Loader2 size={24} className="animate-spin" style={{ color: 'var(--text-muted)' }} />
       </div>
     );
   }
@@ -264,88 +344,150 @@ export default function HomePage() {
   if (status === 'paused') return <ClosedScreen />;
   if (status === 'done' && regData) return <SuccessScreen data={regData} />;
 
+  // ── Main chat UI ────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col min-h-screen max-w-2xl mx-auto px-4 py-6">
-      {/* Header */}
-      <motion.header
-        initial={{ opacity: 0, y: -16 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="glass rounded-2xl px-6 py-4 mb-6 flex items-center gap-4"
+    <div className="flex flex-col min-h-screen" style={{ background: 'var(--bg)' }}>
+
+      {/* Top bar */}
+      <header
+        className="sticky top-0 z-20 flex items-center justify-between px-4 h-12 border-b"
+        style={{
+          background: 'var(--surface)',
+          borderColor: 'var(--border)',
+          backdropFilter: 'blur(12px)',
+        }}
       >
-        <div className="w-10 h-10 rounded-xl bg-violet-600/30 border border-violet-500/40 flex items-center justify-center flex-shrink-0">
-          <Leaf className="w-5 h-5 text-violet-300" />
-        </div>
-        <div>
-          <h1 className="font-bold text-white text-lg leading-tight">Codegen Greenhouse Field Visit</h1>
-          <p className="text-xs text-slate-500">AI@IM Club Event Registration</p>
-        </div>
-      </motion.header>
-
-      {/* Chat area */}
-      <div className="flex-1 glass rounded-2xl p-4 mb-4 overflow-y-auto flex flex-col gap-4 min-h-0" style={{ maxHeight: 'calc(100vh - 220px)' }}>
-        <AnimatePresence initial={false}>
-          {history.map((msg, i) => (
-            <Bubble key={i} msg={msg} idx={i} />
-          ))}
-        </AnimatePresence>
-
-        {isTyping && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-start gap-2"
+        {/* Left: logo + title */}
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}
           >
-            <div className="w-8 h-8 rounded-full bg-violet-600/30 border border-violet-500/40 flex items-center justify-center flex-shrink-0 mt-1">
-              <Leaf className="w-4 h-4 text-violet-300" />
-            </div>
-            <TypingIndicator />
-          </motion.div>
-        )}
+            <Leaf size={14} style={{ color: 'var(--accent)' }} />
+          </div>
+          <div>
+            <p className="text-[13px] font-semibold leading-tight" style={{ color: 'var(--text)' }}>
+              Codegen Greenhouse Field Visit
+            </p>
+            <p className="text-[10px] leading-tight" style={{ color: 'var(--text-faint)' }}>
+              AI@IM Club · Event Registration
+            </p>
+          </div>
+        </div>
 
-        {error && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 text-red-400 text-sm glass rounded-xl px-4 py-3">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
-            {error}
-          </motion.div>
-        )}
+        {/* Right: controls */}
+        <div className="flex items-center gap-1">
+          <HelpButton />
+          <ThemeToggle />
+        </div>
+      </header>
 
-        <div ref={bottomRef} />
+      {/* Chat messages */}
+      <div className="flex-1 overflow-y-auto px-4 py-5">
+        <div className="max-w-2xl mx-auto space-y-3">
+          <AnimatePresence initial={false}>
+            {history.map((msg, i) => (
+              <Bubble key={i} msg={msg} />
+            ))}
+          </AnimatePresence>
+
+          {isTyping && (
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-start gap-2"
+            >
+              <div
+                className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+                style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}
+              >
+                <Leaf size={13} style={{ color: 'var(--accent)' }} />
+              </div>
+              <TypingIndicator />
+            </motion.div>
+          )}
+
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-start gap-2.5 rounded-lg px-3.5 py-3 text-sm"
+              style={{
+                background: 'rgba(235,87,87,.08)',
+                border: '1px solid rgba(235,87,87,.25)',
+                color: '#eb5757',
+              }}
+            >
+              <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />
+              <span className="flex-1">{error}</span>
+              <button
+                onClick={handleRetry}
+                className="flex items-center gap-1 text-xs font-medium underline opacity-80 hover:opacity-100 flex-shrink-0"
+              >
+                <RefreshCw size={11} /> Retry
+              </button>
+            </motion.div>
+          )}
+
+          <div ref={bottomRef} />
+        </div>
       </div>
 
-      {/* Input */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="glass rounded-2xl px-4 py-3 flex items-end gap-3"
+      {/* Input bar */}
+      <div
+        className="sticky bottom-0 z-20 border-t px-4 py-3"
+        style={{
+          background: 'var(--surface)',
+          borderColor: 'var(--border)',
+          backdropFilter: 'blur(12px)',
+        }}
       >
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKey}
-          rows={1}
-          maxLength={500}
-          placeholder="Type your message…"
-          disabled={isTyping}
-          className="flex-1 bg-transparent text-white placeholder-slate-600 text-sm resize-none outline-none leading-relaxed"
-          style={{ minHeight: '24px', maxHeight: '120px' }}
-          onInput={(e) => {
-            const el = e.currentTarget;
-            el.style.height = 'auto';
-            el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
-          }}
-        />
-        <button
-          onClick={handleSend}
-          disabled={!input.trim() || isTyping}
-          className="w-9 h-9 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center flex-shrink-0 transition-colors"
-        >
-          <Send className="w-4 h-4 text-white" />
-        </button>
-      </motion.div>
+        <div className="max-w-2xl mx-auto flex items-end gap-2">
+          <div
+            className="flex-1 flex items-end gap-2 rounded-xl px-3.5 py-2.5"
+            style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}
+          >
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKey}
+              rows={1}
+              maxLength={500}
+              placeholder="Type your message…"
+              disabled={isTyping}
+              className="flex-1 bg-transparent text-sm resize-none outline-none leading-relaxed"
+              style={{
+                color: 'var(--text)',
+                minHeight: '22px',
+                maxHeight: '120px',
+                overflowY: 'auto',
+              }}
+              onInput={(e) => {
+                const el = e.currentTarget;
+                el.style.height = 'auto';
+                el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+              }}
+            />
+            <button
+              onClick={handleSend}
+              disabled={!input.trim() || isTyping}
+              className="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-150"
+              style={{
+                background: input.trim() && !isTyping ? 'var(--accent)' : 'var(--border)',
+                color: input.trim() && !isTyping ? 'var(--accent-fg)' : 'var(--text-faint)',
+                cursor: input.trim() && !isTyping ? 'pointer' : 'not-allowed',
+              }}
+            >
+              <Send size={13} />
+            </button>
+          </div>
+        </div>
 
-      <p className="text-center text-xs text-slate-700 mt-3">
-        Powered by Gemini · AI@IM Club
-      </p>
+        <p className="text-center text-[10px] mt-2.5" style={{ color: 'var(--text-faint)' }}>
+          Powered by Gemini · AI@IM Club
+        </p>
+      </div>
     </div>
   );
 }
