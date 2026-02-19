@@ -359,7 +359,7 @@ export default function HomePage() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto px-4 md:px-0 scroll-smooth">
-        <div className="max-w-3xl mx-auto w-full pt-24 pb-32">
+        <div className="max-w-3xl mx-auto w-full pt-36 pb-32">
 
           {status === 'closed' ? (
             <ClosedScreen />
