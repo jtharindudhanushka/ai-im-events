@@ -1,32 +1,30 @@
-# AI@IM Events — Field Visit Portal 🚀
+# AI Event Registration Portal 🚀
 
-> **Modern, AI-powered registration system for the Codegen Greenhouse Field Visit.**
-> Built for the **AI@IM Special Interest Group** (SIG).
+> **A chatbot response collecting form powered by Groq.**
+> Built with Next.js 14, Supabase, and Tailwind CSS.
 
 ---
 
 ## ✨ Features
 
 ### 🤖 **Smart Chatbot**
-- Powered by **Groq (Llama 3 70B)** for natural, human-like conversations.
-- Collects **Name, WhatsApp, Email, Academic Level, and Reason**.
-- Validates **phone numbers (7-15 digits)** and ensures meaningful reasons.
-- Provide **context awareness** about the "Codegen Greenhouse" visit.
+- Powered by **Groq (Llama 3 70B)** for natural conversation.
+- Intelligently collects user information (Name, Contact, Email, Reason) without rigid forms.
+- Validates inputs like phone numbers and email addresses on the fly.
 
 ### 🛡️ **Admin Dashboard**
 - **Secure Access**: Password-protected login.
 - **View All Entries**: Real-time table with search/sort.
 - **Manage Data**:
   - 🗑️ **Delete**: Remove spam or duplicate entries.
-  - 📥 **Export CSV**: Download full attendee list for event management.
-  - 📋 **Copy Contacts**: One-click copy all WhatsApp numbers (for group creation).
-- **Pause/Resume**: Instantly close registrations. When paused, the chatbot is hidden and a "Registrations Closed" screen is shown.
+  - 📥 **Export CSV**: Download full attendee list.
+  - 📋 **Copy Contacts**: One-click copy all phone numbers.
+- **Pause/Resume**: Instantly close registrations. When paused, the chatbot is hidden.
 
 ### 🎨 **Modern UI**
 - **Responsive Design**: Works perfectly on Mobile & Desktop.
 - **Glassmorphism**: Sleek, translucent cards and components.
-- **Dark Mode**: Toggle between Light/Dark themes.
-- **Animations**: Smooth transitions with Framer Motion.
+- **Dark Mode**: Supports Light/Dark themes.
 
 ---
 
@@ -66,7 +64,7 @@ ADMIN_SECRET="your-admin-password"
 ```
 
 ### 3. **Database Setup**
-Run the SQL script located in `supabase/setup.sql` inside your **Supabase SQL Editor** to create the necessary tables and policies.
+Run the SQL script located in `supabase/setup.sql` inside your **Supabase SQL Editor** to create the necessary tables.
 
 ### 4. **Run Locally**
 ```bash
@@ -84,13 +82,6 @@ Deploy easily on **Vercel**:
 2.  Import the project in Vercel.
 3.  Add the **Environment Variables** (from step 2) in Vercel settings.
 4.  Hit **Deploy**! 🚀
-
----
-
-## 📞 Support
-
-For any issues or questions, contact the **Chief Coordinator**:
-- **WhatsApp**: [+94 76 219 5995](https://wa.me/94762195995)
 
 ---
 
