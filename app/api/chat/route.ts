@@ -29,24 +29,25 @@ function isRateLimited(ip: string): { limited: boolean; retryAfter?: number } {
 }
 
 // ── System Prompt (Optimized for Llama 3) ─────────────────────────────────────
-const SYSTEM_PROMPT = `You are a friendly assistant for the AI@IM SIG.
+const SYSTEM_PROMPT = `You are a super friendly, helpful, and chill assistant for the AI@IM SIG.
 CONTEXT: 
 - You are registering students for a potential **Greenhouse Facility Visit** (Industry Exposure).
 - The goal is to get a **headcount**. Dates and facility details will be announced later.
-- Keep responses concise and professional.
+- Keep responses concise, warm, and professional.
 - Do NOT mention any specific company names. Just say "Greenhouse Facility".
 
 Your GOAL: Collect exactly 4 pieces of info from the student, one by one.
 1. Full Name
 2. WhatsApp number (e.g. +94 77 123 4567)
-3. Academic Level / Year (e.g. 1st Year, 2nd Year, Staff)
+3. Academic Level (e.g. 1st Year, 2nd Year)
 4. Why they are interested (short reason)
 
 RULES:
 - Ask only ONE question at a time.
-- **Phone Validation:** Accept any valid-looking number (7-15 digits).
-- **Name Validation:** Accept ANY name given, even if it's just one word or a nickname. Do not question it to the user.
+- **Phone Validation:** Accept any valid-looking number.
+- **Name Validation:** Accept ANY name given, even if it's just one word or a nickname.
 - **Reason Validation:** Accept anything the user says, even if short.
+- **Mistakes:** If the user makes a small mistake or enters something twice, just ignore it and move on. NEVER argue with the user.
 - If the student asks about dates/venue, say they are TBD and this is just for headcount.
 - Do not answer off-topic questions. Redirect to registration.
 
@@ -59,7 +60,7 @@ REGISTRATION_COMPLETE:{"name":"<name>","whatsapp":"<whatsapp>","level":"<level>"
 
 6. Contact Support: If the student is stuck, provide Chief Coordinator's WhatsApp: +94762195995.
 
-START: Greet the student and ask for their Full Name.`;
+START: Greet the student warmly and ask for their Full Name.`;
 
 // ── Groq Client ───────────────────────────────────────────────────────────────
 const groq = new Groq({
@@ -100,14 +101,23 @@ export async function POST(req: NextRequest) {
 
     try {
         // Convert Gemini-style history to OpenAI/Groq style
+        // Check if the last message in history is the same as the current message
+        // If so, do not append it again to avoid "double message" confusion
+        const lastMsg = history[history.length - 1];
+        const isDuplicate = lastMsg && lastMsg.role === 'user' &&
+            (lastMsg.parts?.[0]?.text === message || lastMsg.content === message);
+
         const messages = [
             { role: 'system', content: SYSTEM_PROMPT },
             ...history.map((m: any) => ({
                 role: m.role === 'model' ? 'assistant' : 'user',
-                content: m.parts?.[0]?.text || m.content || '' // Handle both formats
-            })),
-            { role: 'user', content: message }
+                content: m.parts?.[0]?.text || m.content || ''
+            }))
         ];
+
+        if (!isDuplicate) {
+            messages.push({ role: 'user', content: message });
+        }
 
         let completion;
 
