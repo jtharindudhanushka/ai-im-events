@@ -431,9 +431,14 @@ export default function HomePage() {
                                 {isTyping ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
                             </button>
                         </div>
-                        <p className="text-center text-xs text-gray-400 mt-3 font-medium">
-                            Powered by Groq Llama 3 · AI@IM SIG
-                        </p>
+                        <div className="text-center mt-3">
+                            <p className="text-xs text-gray-400 font-medium mb-1">
+                                Powered by Groq Llama 3 · AI@IM SIG
+                            </p>
+                            <p className="text-[10px] text-gray-500/80 dark:text-gray-500 max-w-sm mx-auto leading-tight">
+                                This is a Beta Stage testing App. AI may hallucinate. Errors can be reported via the help section.
+                            </p>
+                        </div>
                     </div>
                 </div>
             )}
