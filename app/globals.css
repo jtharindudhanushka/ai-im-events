@@ -124,4 +124,8 @@ textarea {
   field-sizing: content;
   font-family: inherit;
   resize: none;
+  outline: none;
 }
+
+/* Dark mode fallback for v4 if needed, or ensuring selector strategy */
+@variant dark (&:where(.dark, .dark *));

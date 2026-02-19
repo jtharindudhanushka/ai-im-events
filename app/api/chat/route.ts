@@ -3,7 +3,7 @@ import { Groq } from 'groq-sdk';
 
 // ── Rate limit store (in-memory) ─────────────────────────────────────────────
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT = 10;          // higher limit for Groq (it's fast)
+const RATE_LIMIT = 20; // 20 RPM for Groq Llama 3 70B (it's fast)
 const MAX_MSG_LEN = 1000;
 const MAX_TURNS = 30;
 
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     // Rate limit
     const ip = getIP(req);
     const { limited, retryAfter } = isRateLimited(ip);
-    if (limited) return NextResponse.json({ error: `Too many requests. Wait ${retryAfter}s.` }, { status: 429 });
+    if (limited) return NextResponse.json({ error: `You're messaging too fast! Wait ${retryAfter}s.` }, { status: 429 });
 
     let body;
     try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid body' }, { status: 400 }); }
@@ -92,10 +92,19 @@ export async function POST(req: NextRequest) {
         });
 
         const reply = completion.choices[0]?.message?.content || '';
+        if (!reply) throw new Error('Empty response from Groq');
         return NextResponse.json({ reply });
 
     } catch (err: any) {
-        console.error('Groq Error:', err);
-        return NextResponse.json({ error: 'AI service busy. Please try again.' }, { status: 503 });
+        const msg = err.message || JSON.stringify(err);
+        console.error('Groq Error:', msg);
+
+        // Friendly error messages
+        let friendly = 'AI service hiccuped. Please try again.';
+        if (msg.includes('401') || msg.includes('unauthorized')) friendly = 'Invalid API Key. Tell the admin.';
+        if (msg.includes('429')) friendly = 'Groq is busy (rate limit). Try in a minute.';
+        if (msg.includes('500') || msg.includes('503')) friendly = 'Groq is temporarily down.';
+
+        return NextResponse.json({ error: `${friendly} (${msg.slice(0, 50)}...)` }, { status: 503 });
     }
 }

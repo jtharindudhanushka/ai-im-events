@@ -94,6 +94,77 @@ function SuccessScreen({ data }: { data: RegistrationData }) {
   );
 }
 
+// ── Help popover ──────────────────────────────────────────────────────────────
+function HelpButton() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    if (open) document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [open]);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(!open)}
+        className={`p-2.5 rounded-full transition-colors text-gray-500 dark:text-gray-400 ${open ? 'bg-gray-100 dark:bg-zinc-800' : 'hover:bg-gray-100 dark:hover:bg-zinc-800'}`}
+        title="Help"
+      >
+        <HelpCircle size={20} />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="absolute right-0 top-full mt-2 w-72 p-5 z-50 bg-white dark:bg-[#1E1F20] border border-gray-200 dark:border-zinc-800 shadow-xl rounded-2xl"
+          >
+            <div className="flex items-start justify-between mb-2">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Codegen Industry Visit</h3>
+                <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">AI@IM SIG Event</p>
+              </div>
+              <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 mb-4">
+              <p className="text-xs text-blue-800 dark:text-blue-200 leading-relaxed font-medium">
+                📅 Date to be announced soon!
+              </p>
+              <p className="text-[11px] text-blue-600 dark:text-blue-300 mt-1">
+                Stay tuned for updates.
+              </p>
+            </div>
+
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 leading-relaxed">
+              Have questions or need clarification? Contact the Chief Coordinator directly.
+            </p>
+
+            <a
+              href="https://wa.me/964762195995"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full py-2.5 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl text-sm font-medium transition-all shadow-sm hover:shadow-md"
+              onClick={() => setOpen(false)}
+            >
+              <MessageCircle size={16} />
+              Chat on WhatsApp
+            </a>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function HomePage() {
   const [history, setHistory] = useState<ChatMessage[]>([]);
@@ -136,9 +207,12 @@ export default function HomePage() {
         body: JSON.stringify({ history: newHistory, message: msg }),
       });
 
-      if (!res.ok) throw new Error('Failed');
-
       const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || `Error ${res.status}`);
+      }
+
       const reply = data.reply || '';
 
       // Check for completion
@@ -161,8 +235,12 @@ export default function HomePage() {
       }
 
       setHistory([...newHistory, { role: 'model', parts: [{ text: reply }] }]);
-    } catch {
-      setHistory([...newHistory, { role: 'model', parts: [{ text: "⚠️ Oops, I hiccuped. Could you say that again?" }] }]);
+    } catch (err: any) {
+      const errMsg = err.message || "Unknown error";
+      setHistory([...newHistory, {
+        role: 'model',
+        parts: [{ text: `⚠️ **Oops!** ${errMsg}` }]
+      }]);
     }
 
     // Cleanup if not done
@@ -187,9 +265,7 @@ export default function HomePage() {
           <span className="font-semibold text-gray-700 dark:text-gray-200">Events</span>
         </div>
         <div className="flex items-center gap-1">
-          <a href="https://wa.me/964762195995" target="_blank" className="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors text-gray-500 dark:text-gray-400">
-            <HelpCircle size={20} />
-          </a>
+          <HelpButton />
           <ThemeToggle />
         </div>
       </header>
