@@ -27,13 +27,14 @@ export async function GET(req: NextRequest) {
         const rows = data ?? [];
 
         if (format === 'csv') {
-            const header = 'ID,Name,WhatsApp,Level,Reason,Registered At\n';
+            const header = 'ID,Name,WhatsApp,Email,Level,Reason,Registered At\n';
             const body = rows
                 .map((r) =>
                     [
                         r.id,
                         `"${r.name.replace(/"/g, '""')}"`,
                         r.whatsapp,
+                        `"${r.email || ''}"`,
                         `"${r.level}"`,
                         `"${r.reason.replace(/"/g, '""')}"`,
                         new Date(r.created_at).toLocaleString('en-GB'),
@@ -54,6 +55,39 @@ export async function GET(req: NextRequest) {
     } catch (err) {
         console.error('Admin GET error:', err);
         return NextResponse.json({ error: 'Failed to fetch data.' }, { status: 500 });
+    }
+}
+
+// DELETE /api/admin — delete a registration
+export async function DELETE(req: NextRequest) {
+    if (!checkAdmin(req)) {
+        return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+    }
+
+    let body: { id?: string };
+    try {
+        body = await req.json();
+    } catch {
+        return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 });
+    }
+
+    if (!body.id) {
+        return NextResponse.json({ error: 'ID is required.' }, { status: 400 });
+    }
+
+    try {
+        const supabase = createAdminClient();
+        const { error } = await supabase
+            .from('field_trip_registrations')
+            .delete()
+            .eq('id', body.id);
+
+        if (error) throw error;
+
+        return NextResponse.json({ success: true });
+    } catch (err) {
+        console.error('Admin DELETE error:', err);
+        return NextResponse.json({ error: 'Failed to delete registration.' }, { status: 500 });
     }
 }
 

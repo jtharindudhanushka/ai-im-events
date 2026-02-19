@@ -1,14 +1,14 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Send, Leaf, AlertCircle, Loader2, Moon, Sun, HelpCircle, X, Sparkles, MessageCircle
+  Send, AlertCircle, Loader2, Moon, Sun, HelpCircle, X, Sparkles, MessageCircle
 } from 'lucide-react';
-import { cn } from '@/lib/utils'; // Assumes you have this, or I'll implement inline
+import { cn } from '@/lib/utils'; // Assumes you have this
 
 interface ChatMessage { role: 'user' | 'model'; parts: { text: string }[]; }
-interface RegistrationData { name: string; whatsapp: string; level: string; reason: string; }
+interface RegistrationData { name: string; whatsapp: string; email: string; level: string; reason: string; }
 
 // ── Theme toggle ──────────────────────────────────────────────────────────────
 function ThemeToggle() {
@@ -84,6 +84,7 @@ function Bubble({ msg, onConfirm }: { msg: ChatMessage; onConfirm: (text: string
               {[
                 { l: 'Name', v: confirmData.name },
                 { l: 'WhatsApp', v: confirmData.whatsapp },
+                { l: 'Email', v: confirmData.email },
                 { l: 'Level', v: confirmData.level },
                 { l: 'Reason', v: confirmData.reason }
               ].map(({ l, v }) => (
@@ -106,6 +107,35 @@ function Bubble({ msg, onConfirm }: { msg: ChatMessage; onConfirm: (text: string
   );
 }
 
+// ── Closed Screen ─────────────────────────────────────────────────────────────
+function ClosedScreen() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 animate-in fade-in zoom-in duration-500">
+      <div className="w-20 h-20 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mb-6 text-amber-600 dark:text-amber-400">
+        <AlertCircle size={32} />
+      </div>
+      <h1 className="text-3xl font-semibold mb-2 text-center text-gray-900 dark:text-white">Registrations Closed</h1>
+      <p className="text-lg text-gray-500 dark:text-gray-400 mb-10 text-center max-w-md">
+        No events are open for registration at the moment. Please check back later or contact the team.
+      </p>
+
+      <a
+        href="https://wa.me/964762195995"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center justify-center gap-2 px-8 py-3 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl text-sm font-medium transition-all shadow-md hover:shadow-lg"
+      >
+        <MessageCircle size={18} />
+        Contact Team
+      </a>
+
+      <div className="mt-12 text-center">
+        <p className="text-sm text-gray-400">AI@IM SIG · Field Visit</p>
+      </div>
+    </div>
+  );
+}
+
 // ── Success Screen ────────────────────────────────────────────────────────────
 function SuccessScreen({ data }: { data: RegistrationData }) {
   return (
@@ -113,13 +143,16 @@ function SuccessScreen({ data }: { data: RegistrationData }) {
       <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-6 text-green-600 dark:text-green-400">
         <Sparkles size={32} />
       </div>
-      <h1 className="text-3xl font-semibold mb-2 text-center text-gray-900 dark:text-white">You&apos;re in! 🎉</h1>
-      <p className="text-lg text-gray-500 dark:text-gray-400 mb-10 text-center">See you at the Greenhouse.</p>
+      <h1 className="text-3xl font-semibold mb-2 text-center text-gray-900 dark:text-white">Submitted! 🎉</h1>
+      <p className="text-lg text-gray-500 dark:text-gray-400 mb-10 text-center">
+        More details will be shared in the future.
+      </p>
 
       <div className="w-full max-w-md bg-gray-50 dark:bg-zinc-900/50 rounded-2xl p-6 border border-gray-100 dark:border-zinc-800">
         {[
           { l: 'Name', v: data.name },
           { l: 'WhatsApp', v: data.whatsapp },
+          { l: 'Email', v: data.email },
           { l: 'Level', v: data.level },
           { l: 'Goal', v: data.reason }
         ].map(({ l, v }) => (
@@ -213,10 +246,20 @@ export default function HomePage() {
   const [history, setHistory] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [status, setStatus] = useState<'open' | 'done'>('open');
+  const [status, setStatus] = useState<'open' | 'done' | 'closed'>('open');
   const [regData, setRegData] = useState<RegistrationData | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Check pause status on mount
+  useEffect(() => {
+    fetch('/api/status')
+      .then(res => res.json())
+      .then(data => {
+        if (data.paused) setStatus('closed');
+      })
+      .catch(() => { });
+  }, []);
 
   // Auto-scroll
   useEffect(() => {
@@ -225,15 +268,16 @@ export default function HomePage() {
 
   // Initial greeting
   useEffect(() => {
+    if (status === 'closed') return;
     // Small delay for effect
     setTimeout(() => {
       setHistory([{ role: 'model', parts: [{ text: "Hi there! 👋 I'm the AI@IM assistant.\n\nReady to sign up for the **Codegen Greenhouse Field Visit**?" }] }]);
     }, 600);
-  }, []);
+  }, [status]);
 
   async function handleSend(overrideMsg?: string) {
     const msg = overrideMsg || input.trim();
-    if (!msg || isTyping || status === 'done') return;
+    if (!msg || isTyping || status === 'done' || status === 'closed') return;
 
     if (!overrideMsg) setInput('');
     // Reset textarea height
@@ -274,7 +318,7 @@ export default function HomePage() {
           setStatus('done');
           setIsTyping(false);
           return;
-        } catch { }
+        } catch { } // Consider logging here or alerting user in a more robust app
       }
 
       setHistory([...newHistory, { role: 'model', parts: [{ text: reply }] }]);
@@ -317,7 +361,9 @@ export default function HomePage() {
       <main className="flex-1 overflow-y-auto px-4 md:px-0 scroll-smooth">
         <div className="max-w-3xl mx-auto w-full pt-6 pb-32">
 
-          {status === 'done' && regData ? (
+          {status === 'closed' ? (
+            <ClosedScreen />
+          ) : status === 'done' && regData ? (
             <SuccessScreen data={regData} />
           ) : (
             <>

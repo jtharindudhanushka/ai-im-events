@@ -12,6 +12,7 @@ interface Registration {
     id: string;
     name: string;
     whatsapp: string;
+    email: string;
     level: string;
     reason: string;
     created_at: string;
@@ -139,6 +140,28 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
         fetchData();
         fetchPauseState();
     }, [fetchData, fetchPauseState]);
+
+    async function deleteRegistration(id: string) {
+        if (!confirm('Are you sure you want to delete this registration?')) return;
+
+        // Optimistic update
+        setRows(prev => prev.filter(r => r.id !== id));
+
+        try {
+            const res = await fetch('/api/admin', {
+                method: 'DELETE',
+                headers: { ...authHeaders, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id }),
+            });
+            if (!res.ok) {
+                const json = await res.json();
+                throw new Error(json.error || 'Failed to delete');
+            }
+        } catch (err: any) {
+            setError(err.message);
+            fetchData(); // Revert on error
+        }
+    }
 
     async function togglePause() {
         setPauseLoading(true);
@@ -291,8 +314,8 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b border-white/8">
-                                    {['#', 'Name', 'WhatsApp', 'Level', 'Reason', 'Registered'].map((h) => (
-                                        <th key={h} className="px-4 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                                    {['#', 'Name', 'WhatsApp', 'Email', 'Level', 'Reason', 'Registered', ''].map((h, i) => (
+                                        <th key={i} className="px-4 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                                             {h}
                                         </th>
                                     ))}
@@ -305,11 +328,12 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         transition={{ delay: i * 0.03 }}
-                                        className="border-b border-white/5 hover:bg-white/3 transition-colors"
+                                        className="border-b border-white/5 hover:bg-white/3 transition-colors group"
                                     >
                                         <td className="px-4 py-3.5 text-slate-600 font-mono text-xs">{i + 1}</td>
                                         <td className="px-4 py-3.5 text-white font-medium whitespace-nowrap">{r.name}</td>
                                         <td className="px-4 py-3.5 text-violet-300 font-mono text-xs whitespace-nowrap">{r.whatsapp}</td>
+                                        <td className="px-4 py-3.5 text-slate-300 text-xs whitespace-nowrap">{r.email}</td>
                                         <td className="px-4 py-3.5">
                                             <span className="glass rounded-lg px-2.5 py-1 text-xs text-slate-300 whitespace-nowrap">{r.level}</span>
                                         </td>
@@ -318,6 +342,15 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
                                         </td>
                                         <td className="px-4 py-3.5 text-slate-600 text-xs whitespace-nowrap">
                                             {new Date(r.created_at).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' })}
+                                        </td>
+                                        <td className="px-4 py-3.5 text-right">
+                                            <button
+                                                onClick={() => deleteRegistration(r.id)}
+                                                className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                                title="Delete"
+                                            >
+                                                <LogOut className="w-4 h-4" />
+                                            </button>
                                         </td>
                                     </motion.tr>
                                 ))}
