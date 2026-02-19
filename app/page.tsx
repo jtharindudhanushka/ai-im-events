@@ -36,9 +36,19 @@ function BotIcon() {
 }
 
 // ── Chat Bubble (Gemini Style) ────────────────────────────────────────────────
-function Bubble({ msg }: { msg: ChatMessage }) {
+function Bubble({ msg, onConfirm }: { msg: ChatMessage; onConfirm: (text: string) => void }) {
   const isUser = msg.role === 'user';
-  const text = msg.parts[0]?.text ?? '';
+  const rawText = msg.parts[0]?.text ?? '';
+
+  // Check for Confirmation Request
+  const confirmMatch = !isUser && rawText.match(/CONFIRMATION_REQUEST\s*[:\s]*(\{[\s\S]*?\})/i);
+  let confirmData: RegistrationData | null = null;
+  if (confirmMatch) {
+    try { confirmData = JSON.parse(confirmMatch[1]); } catch { }
+  }
+
+  // Clean text for display (remove JSON parts if we are rendering card)
+  const displayText = confirmMatch ? rawText.replace(/CONFIRMATION_REQUEST\s*[:\s]*\{[\s\S]*?\}/i, '').trim() : rawText;
 
   return (
     <motion.div
@@ -54,9 +64,42 @@ function Bubble({ msg }: { msg: ChatMessage }) {
           ? "bg-gray-100 dark:bg-zinc-800 px-5 py-3 rounded-[24px] rounded-br-[4px] text-gray-800 dark:text-gray-100" // User bubble
           : "text-gray-900 dark:text-gray-100 pt-1" // Bot text (no bubble needed)
       )}>
-        {/* Simple markdown-like rendering (bolding) */}
-        {text.split(/\*\*(.*?)\*\*/g).map((part, i) =>
-          i % 2 === 1 ? <strong key={i}>{part}</strong> : part
+        {/* Render text if it exists */}
+        {displayText && (
+          <div className="mb-3">
+            {displayText.split(/\*\*(.*?)\*\*/g).map((part, i) =>
+              i % 2 === 1 ? <strong key={i}>{part}</strong> : part
+            )}
+          </div>
+        )}
+
+        {/* Render Confirmation Card */}
+        {confirmData && (
+          <div className="bg-white dark:bg-[#1E1F20] border border-gray-200 dark:border-zinc-800 rounded-2xl p-5 shadow-sm mt-2">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+              Review Your Details
+            </h3>
+            <div className="space-y-3 mb-5">
+              {[
+                { l: 'Name', v: confirmData.name },
+                { l: 'WhatsApp', v: confirmData.whatsapp },
+                { l: 'Level', v: confirmData.level },
+                { l: 'Reason', v: confirmData.reason }
+              ].map(({ l, v }) => (
+                <div key={l} className="grid grid-cols-[80px_1fr] gap-2 text-sm">
+                  <span className="text-gray-500 dark:text-gray-400">{l}</span>
+                  <span className="font-medium text-gray-900 dark:text-gray-200">{v}</span>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => onConfirm("Yes, these details are correct.")}
+              className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
+            >
+              Confirm & Register
+            </button>
+          </div>
         )}
       </div>
     </motion.div>
@@ -188,11 +231,11 @@ export default function HomePage() {
     }, 600);
   }, []);
 
-  async function handleSend() {
-    const msg = input.trim();
+  async function handleSend(overrideMsg?: string) {
+    const msg = overrideMsg || input.trim();
     if (!msg || isTyping || status === 'done') return;
 
-    setInput('');
+    if (!overrideMsg) setInput('');
     // Reset textarea height
     if (inputRef.current) inputRef.current.style.height = 'auto';
 
@@ -215,8 +258,8 @@ export default function HomePage() {
 
       const reply = data.reply || '';
 
-      // Check for completion
-      const match = reply.match(/REGISTRATION_COMPLETE:([\s\S]*?\{[\s\S]*?\})/);
+      // Check for completion with relaxed regex
+      const match = reply.match(/REGISTRATION_COMPLETE\s*[:\s]*(\{[\s\S]*?\})/i);
       if (match) {
         try {
           const parsed = JSON.parse(match[1]);
@@ -245,8 +288,8 @@ export default function HomePage() {
 
     // Cleanup if not done
     setIsTyping(false);
-    // We know status was 'open' at start, so unless we returned above, we are still open.
-    inputRef.current?.focus();
+    // Only focus if we typed manually (no override)
+    if (!overrideMsg) inputRef.current?.focus();
   }
 
   function handleKey(e: React.KeyboardEvent) {
@@ -287,7 +330,7 @@ export default function HomePage() {
 
               <AnimatePresence initial={false}>
                 {history.map((msg, i) => (
-                  <Bubble key={i} msg={msg} />
+                  <Bubble key={i} msg={msg} onConfirm={handleSend} />
                 ))}
               </AnimatePresence>
 
@@ -329,7 +372,7 @@ export default function HomePage() {
                 }}
               />
               <button
-                onClick={handleSend}
+                onClick={() => handleSend()}
                 disabled={!input.trim() || isTyping}
                 className="p-2.5 mb-1.5 mr-1.5 rounded-full bg-blue-600 text-white disabled:bg-transparent disabled:text-gray-400 transition-all hover:bg-blue-700 disabled:hover:bg-transparent"
               >
