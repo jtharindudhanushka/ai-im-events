@@ -1,36 +1,97 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI@IM Events — Field Visit Portal 🚀
 
-## Getting Started
+> **Modern, AI-powered registration system for the Codegen Greenhouse Field Visit.**
+> Built for the **AI@IM Special Interest Group** (SIG).
 
-First, run the development server:
+---
 
+## ✨ Features
+
+### 🤖 **Smart Chatbot**
+- Powered by **Groq (Llama 3 70B)** for natural, human-like conversations.
+- Collects **Name, WhatsApp, Email, Academic Level, and Reason**.
+- Validates **phone numbers (7-15 digits)** and ensures meaningful reasons.
+- Provide **context awareness** about the "Codegen Greenhouse" visit.
+
+### 🛡️ **Admin Dashboard**
+- **Secure Access**: Password-protected login.
+- **View All Entries**: Real-time table with search/sort.
+- **Manage Data**:
+  - 🗑️ **Delete**: Remove spam or duplicate entries.
+  - 📥 **Export CSV**: Download full attendee list for event management.
+  - 📋 **Copy Contacts**: One-click copy all WhatsApp numbers (for group creation).
+- **Pause/Resume**: Instantly close registrations. When paused, the chatbot is hidden and a "Registrations Closed" screen is shown.
+
+### 🎨 **Modern UI**
+- **Responsive Design**: Works perfectly on Mobile & Desktop.
+- **Glassmorphism**: Sleek, translucent cards and components.
+- **Dark Mode**: Toggle between Light/Dark themes.
+- **Animations**: Smooth transitions with Framer Motion.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Framework**: [Next.js 14](https://nextjs.org/) (App Router)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) + [Framer Motion](https://www.framer.com/motion/)
+- **Database**: [Supabase](https://supabase.com/) (PostgreSQL)
+- **AI Engine**: [Groq API](https://groq.com/) (Llama 3 70B)
+- **Deployment**: [Vercel](https://vercel.com/)
+
+---
+
+## 🚀 Setup Guide
+
+### 1. **Clone the Repo**
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/your-username/ai-im-events.git
+cd ai-im-events
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. **Environment Variables**
+Create a `.env.local` file in the root directory:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```env
+# Database (Supabase)
+NEXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key"
+SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# AI (Groq)
+GROQ_API_KEY="gsk_..."
 
-## Learn More
+# Admin Security
+ADMIN_SECRET="your-admin-password"
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 3. **Database Setup**
+Run the SQL script located in `supabase/setup.sql` inside your **Supabase SQL Editor** to create the necessary tables and policies.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 4. **Run Locally**
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) to see the app.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 📦 Deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Deploy easily on **Vercel**:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1.  Push your code to GitHub.
+2.  Import the project in Vercel.
+3.  Add the **Environment Variables** (from step 2) in Vercel settings.
+4.  Hit **Deploy**! 🚀
+
+---
+
+## 📞 Support
+
+For any issues or questions, contact the **Chief Coordinator**:
+- **WhatsApp**: [+94 76 219 5995](https://wa.me/94762195995)
+
+---
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for details.
