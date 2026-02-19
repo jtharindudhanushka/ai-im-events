@@ -19,10 +19,10 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'All fields are required.' }, { status: 400 });
     }
 
-    // Basic phone validation (7-15 digits)
+    // Basic phone validation (just check it's not super short)
     const phoneDigits = whatsapp.replace(/\D/g, '');
-    if (phoneDigits.length < 7 || phoneDigits.length > 15) {
-        return NextResponse.json({ error: 'Invalid phone number length.' }, { status: 400 });
+    if (phoneDigits.length < 5) {
+        return NextResponse.json({ error: 'Invalid phone number.' }, { status: 400 });
     }
 
     // Reason validation (just check not empty)
