@@ -155,6 +155,7 @@ export default function HomePage() {
           });
 
           setStatus('done');
+          setIsTyping(false);
           return;
         } catch { }
       }
@@ -162,11 +163,12 @@ export default function HomePage() {
       setHistory([...newHistory, { role: 'model', parts: [{ text: reply }] }]);
     } catch {
       setHistory([...newHistory, { role: 'model', parts: [{ text: "⚠️ Oops, I hiccuped. Could you say that again?" }] }]);
-    } finally {
-      setIsTyping(false);
-      // Keep focus
-      if (status !== 'done') inputRef.current?.focus();
     }
+
+    // Cleanup if not done
+    setIsTyping(false);
+    // We know status was 'open' at start, so unless we returned above, we are still open.
+    inputRef.current?.focus();
   }
 
   function handleKey(e: React.KeyboardEvent) {
