@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
 
     const { name, whatsapp, email, level, reason } = body;
 
-    if (!name || !whatsapp || !email || !level || !reason) {
+    if (!name || !whatsapp || !level || !reason) {
         return NextResponse.json({ error: 'All fields are required.' }, { status: 400 });
     }
 
@@ -25,14 +25,9 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Invalid phone number length.' }, { status: 400 });
     }
 
-    // Email validation
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        return NextResponse.json({ error: 'Invalid email address.' }, { status: 400 });
-    }
-
-    // Reason validation (min 10 chars)
-    if (reason.trim().length < 10) {
-        return NextResponse.json({ error: 'Please provide a more detailed reason.' }, { status: 400 });
+    // Reason validation (just check not empty)
+    if (!reason.trim()) {
+        return NextResponse.json({ error: 'Please provide a reason.' }, { status: 400 });
     }
 
     try {
@@ -40,7 +35,7 @@ export async function POST(req: NextRequest) {
         const { error } = await supabase.from('field_trip_registrations').insert({
             name: sanitize(name),
             whatsapp: sanitize(whatsapp),
-            email: sanitize(email),
+            email: sanitize(email || ''), // Default to empty string if missing
             level: sanitize(level),
             reason: sanitize(reason),
         });
