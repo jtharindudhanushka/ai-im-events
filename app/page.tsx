@@ -40,15 +40,23 @@ function Bubble({ msg, onConfirm }: { msg: ChatMessage; onConfirm: (text: string
   const isUser = msg.role === 'user';
   const rawText = msg.parts[0]?.text ?? '';
 
-  // Check for Confirmation Request
-  const confirmMatch = !isUser && rawText.match(/CONFIRMATION_REQUEST\s*[:\s]*(\{[\s\S]*?\})/i);
+  // 1. Extract JSON data if present
   let confirmData: RegistrationData | null = null;
-  if (confirmMatch) {
-    try { confirmData = JSON.parse(confirmMatch[1]); } catch { }
+  if (!isUser) {
+    const match = rawText.match(/CONFIRMATION_REQUEST\s*[:\s]*(\{[\s\S]*?\})/i);
+    if (match) {
+      try { confirmData = JSON.parse(match[1]); } catch { }
+    }
   }
 
-  // Clean text for display (remove JSON parts if we are rendering card)
-  const displayText = confirmMatch ? rawText.replace(/CONFIRMATION_REQUEST\s*[:\s]*\{[\s\S]*?\}/i, '').trim() : rawText;
+  // 2. Clean text for display (remove ALL JSON blocks)
+  let displayText = rawText;
+  if (!isUser) {
+    displayText = displayText
+      .replace(/CONFIRMATION_REQUEST\s*[:\s]*\{[\s\S]*?\}/gi, '')
+      .replace(/REGISTRATION_COMPLETE\s*[:\s]*\{[\s\S]*?\}/gi, '')
+      .trim();
+  }
 
   return (
     <motion.div
