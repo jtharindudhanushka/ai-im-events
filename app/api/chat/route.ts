@@ -65,6 +65,18 @@ const groq = new Groq({
     apiKey: process.env.GROQ_API_KEY || '',
 });
 
+async function retryWithBackoff<T>(fn: () => Promise<T>, retries = 3, delay = 1000): Promise<T> {
+    try {
+        return await fn();
+    } catch (error: any) {
+        if (retries === 0 || !error.message?.includes('429')) throw error;
+
+        console.warn(`Rate limit hit. Retrying in ${delay}ms... (${retries} left)`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return retryWithBackoff(fn, retries - 1, delay * 2);
+    }
+}
+
 export async function POST(req: NextRequest) {
     // Rate limit
     const ip = getIP(req);
@@ -96,12 +108,30 @@ export async function POST(req: NextRequest) {
             { role: 'user', content: message }
         ];
 
-        const completion = await groq.chat.completions.create({
-            messages: messages as any,
-            model: 'llama-3.3-70b-versatile', // Updated to latest stable model
-            temperature: 0.6,
-            max_tokens: 1024,
-        });
+        let completion;
+
+        try {
+            // Try 70b first (High Intelligence)
+            completion = await retryWithBackoff(async () => {
+                return await groq.chat.completions.create({
+                    messages: messages as any,
+                    model: 'llama-3.3-70b-versatile',
+                    temperature: 0.6,
+                    max_tokens: 1024,
+                });
+            }, 2, 1000); // 2 retries, start with 1s delay
+        } catch (err) {
+            console.warn('Primary model (70b) failed or rate-limited. Switching to fallback (8b)...');
+            // Fallback to 8b (High Speed/Throughput)
+            completion = await retryWithBackoff(async () => {
+                return await groq.chat.completions.create({
+                    messages: messages as any,
+                    model: 'llama-3.1-8b-instant',
+                    temperature: 0.6,
+                    max_tokens: 1024,
+                });
+            }, 2, 1000);
+        }
 
         const reply = completion.choices[0]?.message?.content || '';
         if (!reply) throw new Error('Empty response from Groq');
