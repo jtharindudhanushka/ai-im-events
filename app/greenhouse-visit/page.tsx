@@ -276,7 +276,7 @@ function RegistrationForm({ onSuccess }: { onSuccess: (data: RegistrationData) =
     return (
         <div className="w-full max-w-md mx-auto animate-in fade-in zoom-in duration-500">
             <div className="text-center mb-10">
-                <h1 className="text-3xl font-bold tracking-tight mb-3">Greenhouse Registration</h1>
+                <h1 className="text-3xl font-bold tracking-tight mb-3">Greenhouse Industry Visit Registration</h1>
                 <p className="text-gray-500 dark:text-gray-400">Join us for an exclusive industry visit.</p>
             </div>
 
