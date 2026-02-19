@@ -58,6 +58,8 @@ CONFIRMATION_REQUEST:{"name":"<name>","whatsapp":"<whatsapp>","email":"<email>",
 2. If the user confirms (says "yes", "correct", or clicks confirm), output ONLY this JSON block:
 REGISTRATION_COMPLETE:{"name":"<name>","whatsapp":"<whatsapp>","email":"<email>","level":"<level>","reason":"<reason>"}
 
+6. Contact Support: If the student is stuck or asks for help, provide the Chief Coordinator's WhatsApp: +94762195995.
+
 START: Greet the student and ask for their Full Name.`;
 
 // ── Groq Client ───────────────────────────────────────────────────────────────

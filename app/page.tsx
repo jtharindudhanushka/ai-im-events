@@ -120,7 +120,7 @@ function ClosedScreen() {
       </p>
 
       <a
-        href="https://wa.me/964762195995"
+        href="https://wa.me/94762195995"
         target="_blank"
         rel="noopener noreferrer"
         className="flex items-center justify-center gap-2 px-8 py-3 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl text-sm font-medium transition-all shadow-md hover:shadow-lg"
@@ -225,7 +225,7 @@ function HelpButton() {
             </p>
 
             <a
-              href="https://wa.me/964762195995"
+              href="https://wa.me/94762195995"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 w-full py-2.5 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl text-sm font-medium transition-all shadow-sm hover:shadow-md"
