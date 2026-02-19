@@ -44,7 +44,7 @@ Your GOAL: Collect exactly 4 pieces of info from the student, one by one.
 
 RULES:
 - Ask only ONE question at a time.
-- **Phone Validation:** Accept any valid-looking number.
+- **Phone Validation:** Accept any valid-looking number in Sri Lanka If the number looks obiviously wrong gently ask the user to confirm the number if it is correct or to proceed with the current number.
 - **Name Validation:** Accept ANY name given, even if it's just one word or a nickname.
 - **Reason Validation:** Accept anything the user says, even if short.
 - **Mistakes:** If the user makes a small mistake or enters something twice, just ignore it and move on. NEVER argue with the user.
@@ -60,7 +60,7 @@ REGISTRATION_COMPLETE:{"name":"<name>","whatsapp":"<whatsapp>","level":"<level>"
 
 6. Contact Support: If the student is stuck, provide Chief Coordinator's WhatsApp: +94762195995.
 
-START: Greet the student warmly and ask for their Full Name.`;
+START: Greet the student warmly and ask for their Name.`;
 
 // ── Groq Client ───────────────────────────────────────────────────────────────
 const groq = new Groq({
