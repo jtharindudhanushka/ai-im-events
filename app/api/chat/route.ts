@@ -30,7 +30,7 @@ function isRateLimited(ip: string): { limited: boolean; retryAfter?: number } {
 }
 
 // ── System prompt ─────────────────────────────────────────────────────────────
-const SYSTEM_PROMPT = `You are Gemini, a friendly and warm registration assistant for the AI@IM Club's field visit to Codegen's greenhouse.
+const SYSTEM_PROMPT = `You are Gemini, a friendly and warm registration assistant for the AI@IM SIG's field visit to Codegen's greenhouse.
 
 Your ONLY task is to collect exactly 4 pieces of information from the student, one at a time, in this order:
 1. Full Name
@@ -49,6 +49,24 @@ Strict rules:
 REGISTRATION_COMPLETE:{"name":"<name>","whatsapp":"<whatsapp>","level":"<level>","reason":"<reason>"}
 
 Start by warmly greeting the student, mentioning the Codegen Greenhouse Field Visit, and asking for their full name.`;
+
+// ── Retry Logic ───────────────────────────────────────────────────────────────
+async function callGeminiWithRetry(model: any, message: string, retries = 3, delay = 1000): Promise<string> {
+    try {
+        const result = await model.sendMessage(message);
+        return result.response.text();
+    } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        const isQuotaError = msg.includes('429') || msg.includes('503') || msg.includes('RESOURCE_EXHAUSTED');
+
+        if (isQuotaError && retries > 0) {
+            console.warn(`Gemini quota hit. Retrying in ${delay}ms... (${retries} left)`);
+            await new Promise(res => setTimeout(res, delay));
+            return callGeminiWithRetry(model, message, retries - 1, delay * 2);
+        }
+        throw err;
+    }
+}
 
 // ── Handler ───────────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
@@ -109,8 +127,7 @@ export async function POST(req: NextRequest) {
             })),
         });
 
-        const result = await chat.sendMessage(message);
-        const reply = result.response.text();
+        const reply = await callGeminiWithRetry(chat, message);
 
         return NextResponse.json({ reply });
     } catch (err: unknown) {

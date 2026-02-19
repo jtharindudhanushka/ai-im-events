@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Send, Leaf, CheckCircle2, AlertCircle, Loader2,
-  Moon, Sun, HelpCircle, X, MessageCircle, RefreshCw,
+  Moon, Sun, HelpCircle, X, MessageCircle
 } from 'lucide-react';
 
 interface ChatMessage { role: 'user' | 'model'; parts: { text: string }[]; }
@@ -20,8 +20,8 @@ function ThemeToggle() {
     try { localStorage.setItem('theme', next ? 'dark' : 'light'); } catch { }
   };
   return (
-    <button onClick={toggle} className="pill-btn ghost" title={dark ? 'Light mode' : 'Dark mode'}>
-      {dark ? <Sun size={14} /> : <Moon size={14} />}
+    <button onClick={toggle} className="pill-btn" title={dark ? 'Light mode' : 'Dark mode'}>
+      {dark ? <Sun size={15} /> : <Moon size={15} />}
     </button>
   );
 }
@@ -30,6 +30,7 @@ function ThemeToggle() {
 function HelpButton() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
@@ -40,40 +41,42 @@ function HelpButton() {
 
   return (
     <div className="relative" ref={ref}>
-      <button onClick={() => setOpen(!open)} className="pill-btn ghost" title="Help">
-        <HelpCircle size={14} />
+      <button
+        onClick={() => setOpen(!open)}
+        className={`pill-btn ${open ? 'bg-gray-100 dark:bg-gray-800' : ''}`}
+        title="Help"
+      >
+        <HelpCircle size={15} />
       </button>
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: -6, scale: 0.96 }}
+            initial={{ opacity: 0, y: -4, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.96 }}
+            exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={{ duration: 0.15 }}
-            className="popover"
-            style={{ top: 'calc(100% + 6px)', right: 0 }}
+            className="popover-content absolute right-0 top-full mt-2 w-64 p-4 z-50 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 shadow-xl rounded-lg"
           >
             <div className="flex items-center justify-between mb-3">
-              <span style={{ color: 'var(--text)', fontWeight: 600, fontSize: 13 }}>Need Help?</span>
-              <button onClick={() => setOpen(false)} className="pill-btn ghost" style={{ padding: '2px 4px' }}>
-                <X size={12} />
+              <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Need Help?</span>
+              <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                <X size={14} />
               </button>
             </div>
-            <p style={{ color: 'var(--text-muted)', fontSize: 12, lineHeight: 1.6, marginBottom: 12 }}>
-              Having trouble registering? Reach out to the AI@IM Club organizer directly.
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4 leading-relaxed">
+              Issues with registration? Contact the Chief Coordinator directly.
             </p>
             <a
               href="https://wa.me/964762195995"
               target="_blank"
               rel="noopener noreferrer"
-              className="pill-btn green"
-              style={{ width: '100%', justifyContent: 'center' }}
+              className="flex items-center justify-center gap-2 w-full py-2 bg-green-500 hover:bg-green-600 text-white rounded-md text-xs font-medium transition-colors"
               onClick={() => setOpen(false)}
             >
-              <MessageCircle size={13} />
+              <MessageCircle size={14} />
               Chat on WhatsApp
             </a>
-            <p style={{ color: 'var(--text-faint)', fontSize: 10.5, textAlign: 'center', marginTop: 10 }}>
+            <p className="text-[10px] text-center text-gray-400 mt-3 font-mono">
               +964 762 195 995
             </p>
           </motion.div>
@@ -86,10 +89,10 @@ function HelpButton() {
 // ── Typing dots ───────────────────────────────────────────────────────────────
 function TypingDots() {
   return (
-    <div className="bubble-bot flex items-center gap-1.5" style={{ padding: '12px 16px' }}>
-      <span className="dot" />
-      <span className="dot" />
-      <span className="dot" />
+    <div className="flex gap-1 p-1">
+      <div className="typing-dot" />
+      <div className="typing-dot" />
+      <div className="typing-dot" />
     </div>
   );
 }
@@ -100,20 +103,18 @@ function Bubble({ msg }: { msg: ChatMessage }) {
   const text = msg.parts[0]?.text ?? '';
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, ease: 'easeOut' }}
-      className={`flex ${isUser ? 'justify-end' : 'items-end gap-2'}`}
+      className={`flex w-full mb-4 ${isUser ? 'justify-end' : 'justify-start'}`}
     >
-      {!isUser && (
-        <div
-          className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mb-0.5"
-          style={{ background: 'var(--accent-light)', border: '1px solid var(--border)' }}
-        >
-          <Leaf size={11} style={{ color: 'var(--accent)' }} />
-        </div>
-      )}
-      <div className={isUser ? 'bubble-user' : 'bubble-bot'}>{text}</div>
+      <div
+        className={`max-w-[85%] px-4 py-2.5 rounded-lg text-[14.5px] leading-relaxed whitespace-pre-wrap shadow-sm ${isUser
+            ? 'bg-blue-600 text-white rounded-br-none'
+            : 'bg-white dark:bg-zinc-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-zinc-700 rounded-bl-none'
+          }`}
+      >
+        {text}
+      </div>
     </motion.div>
   );
 }
@@ -121,19 +122,22 @@ function Bubble({ msg }: { msg: ChatMessage }) {
 // ── Closed screen ─────────────────────────────────────────────────────────────
 function ClosedScreen() {
   return (
-    <div className="flex items-center justify-center min-h-screen p-4" style={{ background: 'var(--bg)' }}>
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="n-card max-w-sm w-full p-8 text-center">
-        <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-5"
-          style={{ background: '#fff8ed', border: '1px solid #f5d57a' }}>
-          <AlertCircle size={22} style={{ color: '#d8a346' }} />
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-zinc-900 p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-md w-full bg-white dark:bg-zinc-800 p-8 rounded-xl border border-gray-200 dark:border-zinc-700 shadow-sm text-center"
+      >
+        <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/20 rounded-lg flex items-center justify-center mx-auto mb-4 text-amber-500">
+          <AlertCircle size={24} />
         </div>
-        <h2 className="text-lg font-semibold mb-2" style={{ color: 'var(--text)' }}>Registrations Closed</h2>
-        <p className="text-sm mb-6" style={{ color: 'var(--text-muted)', lineHeight: 1.65 }}>
-          Event registrations are not open right now.<br />Check back later or contact the organizer.
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Registrations Closed</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">
+          Event registrations are currently paused.<br />Please check back later.
         </p>
         <a href="https://wa.me/964762195995" target="_blank" rel="noopener noreferrer"
-          className="pill-btn green" style={{ justifyContent: 'center' }}>
-          <MessageCircle size={13} /> Chat on WhatsApp
+          className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-md text-sm font-medium hover:bg-green-600 transition-colors">
+          <MessageCircle size={16} /> Contact Chief Coordinator
         </a>
       </motion.div>
     </div>
@@ -143,27 +147,40 @@ function ClosedScreen() {
 // ── Success screen ────────────────────────────────────────────────────────────
 function SuccessScreen({ data }: { data: RegistrationData }) {
   return (
-    <div className="flex items-center justify-center min-h-screen p-4" style={{ background: 'var(--bg)' }}>
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="n-card max-w-sm w-full p-8 text-center">
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.1 }}
-          className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5"
-          style={{ background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
-          <CheckCircle2 size={26} style={{ color: '#16a34a' }} />
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-zinc-900 p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-md w-full bg-white dark:bg-zinc-800 p-8 rounded-xl border border-gray-200 dark:border-zinc-700 shadow-sm text-center"
+      >
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          className="w-16 h-16 bg-green-50 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-6 text-green-500"
+        >
+          <CheckCircle2 size={32} />
         </motion.div>
-        <h2 className="text-xl font-semibold mb-1" style={{ color: 'var(--text)' }}>You&apos;re Registered! 🎉</h2>
-        <p className="text-sm mb-7" style={{ color: 'var(--text-muted)' }}>See you at the Codegen Greenhouse!</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, textAlign: 'left' }}>
-          {[{ l: 'Name', v: data.name }, { l: 'WhatsApp', v: data.whatsapp },
-          { l: 'Level', v: data.level }, { l: 'Reason', v: data.reason }].map(({ l, v }) => (
-            <div key={l} className="flex gap-3 px-3 py-2.5 rounded-xl"
-              style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
-              <span style={{ color: 'var(--text-faint)', fontSize: 11, fontWeight: 500, width: 60, flexShrink: 0, paddingTop: 1 }}>{l}</span>
-              <span style={{ color: 'var(--text)', fontSize: 13 }}>{v}</span>
+
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">Registration Confirmed</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">See you at the Greenhouse!</p>
+
+        <div className="space-y-3 text-left">
+          {[
+            { l: 'Name', v: data.name },
+            { l: 'WhatsApp', v: data.whatsapp },
+            { l: 'Level', v: data.level },
+            { l: 'Reason', v: data.reason }
+          ].map(({ l, v }) => (
+            <div key={l} className="flex flex-col p-3 bg-gray-50 dark:bg-zinc-900 rounded-lg border border-gray-100 dark:border-zinc-800">
+              <span className="text-[10px] uppercase tracking-wider text-gray-400 font-medium mb-1">{l}</span>
+              <span className="text-sm text-gray-800 dark:text-gray-200 font-medium">{v}</span>
             </div>
           ))}
         </div>
-        <div className="divider" style={{ margin: '24px 0 16px' }} />
-        <p style={{ color: 'var(--text-faint)', fontSize: 11 }}>AI@IM Club · Codegen Greenhouse Field Visit</p>
+
+        <div className="mt-8 pt-6 border-t border-gray-100 dark:border-zinc-800">
+          <p className="text-xs text-center text-gray-400">AI@IM SIG · Codegen Field Visit</p>
+        </div>
       </motion.div>
     </div>
   );
@@ -187,44 +204,72 @@ export default function HomePage() {
   const sendToGemini = useCallback(async (currentHistory: ChatMessage[], userMessage: string) => {
     setIsTyping(true); setError('');
     const message = userMessage === '__start__' ? 'Hello, I would like to register.' : userMessage;
+
     try {
       const res = await fetch('/api/chat', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ history: currentHistory, message }),
       });
-      const data = await res.json();
-      if (!res.ok) { setError(data.error ?? 'Something went wrong.'); return; }
-      const reply: string = data.reply ?? '';
 
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? 'Something went wrong.');
+        return;
+      }
+
+      const reply: string = data.reply ?? '';
       const match = reply.match(/REGISTRATION_COMPLETE:([\s\S]*?\{[\s\S]*?\})/);
+
       if (match) {
         try {
           const parsed = JSON.parse(match[1]) as RegistrationData;
           setRegData(parsed);
-          const nh: ChatMessage[] = [...currentHistory,
+
+          const saveMsg = '✅ Saving your registration details...';
+          setHistory([...currentHistory,
           ...(userMessage !== '__start__' ? [{ role: 'user' as const, parts: [{ text: userMessage }] }] : []),
-          { role: 'model', parts: [{ text: '✅ Saving your registration…' }] }];
-          setHistory(nh);
+          { role: 'model', parts: [{ text: saveMsg }] }
+          ]);
+
           const saveRes = await fetch('/api/register', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(parsed),
           });
+
           if (saveRes.ok) setStatus('done');
-          else { const e = await saveRes.json(); setError(e.error ?? 'Failed to save.'); }
-        } catch { setError('Failed to process registration data.'); }
+          else {
+            const e = await saveRes.json();
+            setError(e.error ?? 'Failed to save.');
+          }
+        } catch {
+          setError('Failed to process registration data.');
+        }
         return;
       }
 
       setHistory([...currentHistory,
       ...(userMessage !== '__start__' ? [{ role: 'user' as const, parts: [{ text: userMessage }] }] : []),
       { role: 'model', parts: [{ text: reply }] }]);
-    } catch { setError('Connection error. Please check your network.'); }
-    finally { setIsTyping(false); inputRef.current?.focus(); }
-  }, []);
+
+    } catch {
+      setError('Connection error. Please check your network.');
+    } finally {
+      setIsTyping(false);
+      // Keep focus on input unless we're done
+      if (status !== 'done') inputRef.current?.focus();
+    }
+  }, [status]);
 
   useEffect(() => {
     async function init() {
-      try { const r = await fetch('/api/status'); const j = await r.json(); if (j.paused) { setStatus('paused'); return; } } catch { }
+      try {
+        const r = await fetch('/api/status');
+        const j = await r.json();
+        if (j.paused) { setStatus('paused'); return; }
+      } catch { }
       setStatus('open');
       await sendToGemini([], '__start__');
     }
@@ -232,15 +277,18 @@ export default function HomePage() {
   }, [sendToGemini]);
 
   async function handleSend() {
-    const msg = input.trim(); if (!msg || isTyping) return;
+    const msg = input.trim();
+    if (!msg || isTyping) return;
     setInput('');
-    const newHist: ChatMessage[] = [...history, { role: 'user', parts: [{ text: msg }] }];
-    setHistory(newHist);
+    setHistory([...history, { role: 'user', parts: [{ text: msg }] }]);
     await sendToGemini(history, msg);
   }
 
   function handleKey(e: React.KeyboardEvent) {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
   }
 
   async function handleRetry() {
@@ -248,148 +296,128 @@ export default function HomePage() {
     await sendToGemini([], '__start__');
   }
 
-  // ── Loading ──────────────────────────────────────────────────────────────────
   if (status === 'loading') return (
-    <div className="flex items-center justify-center min-h-screen" style={{ background: 'var(--bg)' }}>
-      <Loader2 size={20} className="animate-spin" style={{ color: 'var(--text-faint)' }} />
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-zinc-900">
+      <Loader2 size={24} className="animate-spin text-gray-400" />
     </div>
   );
   if (status === 'paused') return <ClosedScreen />;
   if (status === 'done' && regData) return <SuccessScreen data={regData} />;
 
-  // ── Chat UI ───────────────────────────────────────────────────────────────────
   return (
-    <div className="flex items-center justify-center min-h-screen p-4 md:p-6" style={{ background: 'var(--bg)' }}>
+    <div className="min-h-screen bg-[#F7F7F5] dark:bg-[#191919] flex items-center justify-center p-4">
+      {/* Main Card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="n-card w-full flex flex-col"
-        style={{ maxWidth: 520, height: 'min(680px, calc(100dvh - 48px))' }}
+        className="w-full max-w-[560px] bg-white dark:bg-[#202020] rounded-xl shadow-lg border border-[#E9E9E7] dark:border-[#2F2F2F] flex flex-col overflow-hidden"
+        style={{ height: 'min(700px, 90vh)' }}
       >
 
-        {/* ── Card header ── */}
-        <div className="flex items-center justify-between px-4 py-3.5 border-b" style={{ borderColor: 'var(--border)', flexShrink: 0 }}>
-          <div className="flex items-center gap-2.5">
-            {/* Logo */}
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center"
-              style={{ background: 'var(--accent-light)', border: '1px solid var(--border)' }}>
-              <Leaf size={15} style={{ color: 'var(--accent)' }} />
+        {/* Header */}
+        <header className="px-6 py-4 border-b border-[#E9E9E7] dark:border-[#2F2F2F] flex items-center justify-between bg-white dark:bg-[#202020]">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50">
+              <Leaf size={16} />
             </div>
-            {/* Title */}
             <div>
-              <h1 style={{ color: 'var(--text)', fontWeight: 600, fontSize: 14, lineHeight: 1.2 }}>
-                Codegen Greenhouse Field Visit
+              <h1 className="text-sm font-semibold text-[#37352F] dark:text-[#D4D4D4] leading-tight">
+                Codegen Field Visit
               </h1>
-              {/* Pill badge */}
-              <span className="pill" style={{ background: 'var(--accent-light)', color: 'var(--accent)', marginTop: 3 }}>
-                AI@IM Club · Registration
+              <span className="text-[11px] text-[#787774] dark:text-[#9B9B9B] font-medium">
+                AI@IM SIG · Registration
               </span>
             </div>
           </div>
-          {/* Controls */}
-          <div className="flex items-center gap-0.5">
+          <div className="flex items-center gap-1">
             <HelpButton />
             <ThemeToggle />
           </div>
-        </div>
+        </header>
 
-        {/* ── Messages area ── */}
-        <div
-          className="flex-1 overflow-y-auto px-4 py-4"
-          style={{ display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 }}
-        >
+        {/* Chat Area */}
+        <div className="flex-1 overflow-y-auto p-6 flex flex-col bg-white dark:bg-[#202020]">
           <AnimatePresence initial={false}>
-            {history.map((msg, i) => <Bubble key={i} msg={msg} />)}
+            {history.map((msg, i) => (
+              <Bubble key={i} msg={msg} />
+            ))}
           </AnimatePresence>
 
           {isTyping && (
-            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-              className="flex items-end gap-2">
-              <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ background: 'var(--accent-light)', border: '1px solid var(--border)' }}>
-                <Leaf size={11} style={{ color: 'var(--accent)' }} />
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-3 mb-4"
+            >
+              <div className="w-6 h-6 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-400 border border-gray-200 dark:border-zinc-700">
+                <Leaf size={12} />
               </div>
-              <TypingDots />
+              <div className="px-3 py-2 bg-gray-50 dark:bg-zinc-900 rounded-lg rounded-bl-none border border-gray-100 dark:border-zinc-800">
+                <TypingDots />
+              </div>
             </motion.div>
           )}
 
           {error && (
-            <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
-              className="flex items-start gap-2.5 rounded-xl px-3.5 py-2.5 text-sm"
-              style={{ background: 'rgba(212,76,71,.07)', border: '1px solid rgba(212,76,71,.2)', color: 'var(--red)' }}>
-              <AlertCircle size={14} className="flex-shrink-0" style={{ marginTop: 2 }} />
-              <span style={{ flex: 1, fontSize: 12.5 }}>{error}</span>
-              <button onClick={handleRetry}
-                className="flex items-center gap-1 flex-shrink-0"
-                style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--red)', opacity: 0.8, cursor: 'pointer', background: 'none', border: 'none', textDecoration: 'underline' }}>
-                <RefreshCw size={10} /> Retry
-              </button>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 rounded-lg flex items-start gap-3"
+            >
+              <AlertCircle size={16} className="text-red-500 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm text-red-600 dark:text-red-400 mb-1">{error}</p>
+                <button
+                  onClick={handleRetry}
+                  className="text-xs font-semibold text-red-700 dark:text-red-300 underline"
+                >
+                  Try Again
+                </button>
+              </div>
             </motion.div>
           )}
 
           <div ref={bottomRef} />
         </div>
 
-        {/* ── Input bar ── */}
-        <div className="px-4 py-3.5 border-t" style={{ borderColor: 'var(--border)', flexShrink: 0 }}>
+        {/* Input Area */}
+        <div className="p-4 bg-white dark:bg-[#202020] border-t border-[#E9E9E7] dark:border-[#2F2F2F]">
           <div
-            className="flex items-end gap-2 rounded-2xl px-3.5 py-2"
-            style={{
-              background: 'var(--bg-subtle)',
-              border: `1px solid ${isTyping ? 'var(--border)' : 'var(--border-input)'}`,
-              transition: 'border-color .15s, box-shadow .15s',
-              boxShadow: input ? 'var(--input-shadow)' : 'none',
-            }}
+            className={`
+              flex items-end gap-2 p-2 rounded-xl bg-[#F7F7F5] dark:bg-[#2C2C2C] border transition-all duration-200
+              ${isTyping ? 'border-transparent opacity-60' : 'border-transparent focus-within:border-blue-500/30 focus-within:ring-2 focus-within:ring-blue-500/10'}
+            `}
           >
             <textarea
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKey}
-              rows={1}
-              maxLength={500}
-              placeholder="Message AIMI Bot…"
               disabled={isTyping}
-              style={{
-                flex: 1,
-                background: 'transparent',
-                color: 'var(--text)',
-                fontSize: 13.5,
-                resize: 'none',
-                outline: 'none',
-                border: 'none',
-                lineHeight: 1.55,
-                minHeight: '22px',
-                maxHeight: '108px',
-                overflowY: 'auto',
-                padding: '2px 0',
-              }}
+              rows={1}
+              placeholder="Type your answer..."
+              className="flex-1 bg-transparent border-none focus:ring-0 resize-none text-sm text-[#37352F] dark:text-[#D4D4D4] placeholder:text-[#9B9B9B] py-2 px-2 max-h-32"
               onInput={(e) => {
-                const el = e.currentTarget;
-                el.style.height = 'auto';
-                el.style.height = `${Math.min(el.scrollHeight, 108)}px`;
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = 'auto';
+                target.style.height = `${Math.min(target.scrollHeight, 128)}px`;
               }}
             />
             <button
               onClick={handleSend}
               disabled={!input.trim() || isTyping}
-              className="pill-btn primary"
-              style={{
-                padding: '5px 12px',
-                fontSize: 12,
-                opacity: (!input.trim() || isTyping) ? 0.4 : 1,
-                cursor: (!input.trim() || isTyping) ? 'not-allowed' : 'pointer',
-                flexShrink: 0,
-                gap: 5,
-              }}
+              className={`
+                p-2 rounded-lg transition-all duration-200 flex-shrink-0 mb-0.5
+                ${input.trim() && !isTyping
+                  ? 'bg-blue-600 text-white shadow-sm hover:bg-blue-700'
+                  : 'bg-gray-200 dark:bg-zinc-700 text-gray-400 cursor-not-allowed'}
+              `}
             >
-              {isTyping ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
-              Send
+              <Send size={16} />
             </button>
           </div>
-          <p style={{ color: 'var(--text-faint)', fontSize: 10.5, textAlign: 'center', marginTop: 10 }}>
-            Powered by Gemini · AI@IM Club
+          <p className="text-center text-[10px] text-[#ACABA9] mt-3 font-medium">
+            Powered by Gemini · AI@IM SIG
           </p>
         </div>
       </motion.div>
