@@ -20,7 +20,8 @@ export async function GET(req: NextRequest) {
         const { data, error } = await supabase
             .from('field_trip_registrations')
             .select('*')
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false })
+            .limit(10000);
 
         if (error) throw error;
 
@@ -56,6 +57,71 @@ export async function GET(req: NextRequest) {
         console.error('Admin GET error:', err);
         return NextResponse.json({ error: 'Failed to fetch data.' }, { status: 500 });
     }
+}
+
+// POST /api/admin — bulk actions
+export async function POST(req: NextRequest) {
+    if (!checkAdmin(req)) {
+        return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+    }
+
+    let body: { action?: string };
+    try {
+        body = await req.json();
+    } catch {
+        return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 });
+    }
+
+    if (body.action === 'delete_duplicates') {
+        try {
+            const supabase = createAdminClient();
+
+            // Fetch all rows ordered oldest-first so we know which to keep
+            const { data, error: fetchErr } = await supabase
+                .from('field_trip_registrations')
+                .select('id, name, whatsapp')
+                .order('created_at', { ascending: true })
+                .limit(20000);
+
+            if (fetchErr) throw fetchErr;
+
+            const rows = data ?? [];
+
+            // Keep the first occurrence of each (name, whatsapp) pair
+            const seen = new Set<string>();
+            const toDelete: string[] = [];
+            for (const row of rows) {
+                const key = `${row.name.trim().toLowerCase()}|${row.whatsapp.trim()}`;
+                if (seen.has(key)) {
+                    toDelete.push(row.id);
+                } else {
+                    seen.add(key);
+                }
+            }
+
+            if (toDelete.length === 0) {
+                return NextResponse.json({ deleted: 0 });
+            }
+
+            // Delete in batches of 500 to stay within URL length limits
+            const BATCH = 500;
+            for (let i = 0; i < toDelete.length; i += BATCH) {
+                const batch = toDelete.slice(i, i + BATCH);
+                const { error: delErr } = await supabase
+                    .from('field_trip_registrations')
+                    .delete()
+                    .in('id', batch);
+                if (delErr) throw delErr;
+            }
+
+            return NextResponse.json({ deleted: toDelete.length });
+        } catch (err) {
+            console.error('delete_duplicates error:', err);
+            return NextResponse.json({ error: 'Failed to delete duplicates.' }, { status: 500 });
+        }
+    }
+
+    return NextResponse.json({ error: 'Unknown action.' }, { status: 400 });
 }
 
 // DELETE /api/admin — delete a registration

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Download, Eye, EyeOff, Loader2, LogOut, Pause, Play,
-    Users, Copy, CheckCheck, AlertCircle, Leaf,
+    Users, Copy, CheckCheck, AlertCircle, Leaf, Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -110,6 +110,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
     const [pauseLoading, setPauseLoading] = useState(false);
     const [copied, setCopied] = useState(false);
     const [error, setError] = useState('');
+    const [dedupLoading, setDedupLoading] = useState(false);
 
     const authHeaders = { Authorization: `Bearer ${token}` };
 
@@ -199,6 +200,41 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
         setTimeout(() => setCopied(false), 2500);
     }
 
+    // Count how many rows are duplicates (same name+whatsapp, non-unique)
+    const duplicateCount = (() => {
+        const seen = new Map<string, number>();
+        for (const r of rows) {
+            const key = `${r.name.trim().toLowerCase()}|${r.whatsapp.trim()}`;
+            seen.set(key, (seen.get(key) ?? 0) + 1);
+        }
+        let dupes = 0;
+        for (const count of seen.values()) if (count > 1) dupes += count - 1;
+        return dupes;
+    })();
+
+    async function deleteDuplicates() {
+        if (!confirm(`This will permanently delete ${duplicateCount} duplicate entries, keeping only the first registration per person. Continue?`)) return;
+        setDedupLoading(true);
+        setError('');
+        try {
+            const res = await fetch('/api/admin', {
+                method: 'POST',
+                headers: { ...authHeaders, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'delete_duplicates' }),
+            });
+            const json = await res.json();
+            if (res.ok) {
+                await fetchData();
+            } else {
+                setError(json.error ?? 'Failed to delete duplicates.');
+            }
+        } catch {
+            setError('Network error.');
+        } finally {
+            setDedupLoading(false);
+        }
+    }
+
     return (
         <div className="min-h-screen px-4 py-6 max-w-6xl mx-auto">
             {/* Header */}
@@ -285,6 +321,23 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
                     {copied ? <CheckCheck className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                     {copied ? 'Copied!' : 'Copy WhatsApp Numbers'}
                 </button>
+
+                {/* Delete Duplicates */}
+                {duplicateCount > 0 && (
+                    <button
+                        onClick={deleteDuplicates}
+                        disabled={dedupLoading}
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-700 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
+                    >
+                        {dedupLoading
+                            ? <Loader2 className="w-4 h-4 animate-spin" />
+                            : <Trash2 className="w-4 h-4" />}
+                        Delete Duplicates
+                        <span className="bg-red-500/40 text-red-200 text-xs font-bold px-2 py-0.5 rounded-full">
+                            {duplicateCount}
+                        </span>
+                    </button>
+                )}
             </motion.div>
 
             {error && (
